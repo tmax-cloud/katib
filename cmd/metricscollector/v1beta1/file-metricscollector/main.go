@@ -81,7 +81,7 @@ func (flag *stopRulesFlag) Set(value string) error {
 	// Get int start step.
 	startStep, err := strconv.Atoi(stopRuleParsed[3])
 	if err != nil {
-		klog.Fatalf("Parse start step: %v to int error: %v", stopRuleParsed[3], err)
+		klog.V(0).Fatalf("Parse start step: %v to int error: %v", stopRuleParsed[3], err)
 	}
 
 	// For each stop rule this order: 1 - metric name, 2 - metric value, 3 - comparison type, 4 - start step.
@@ -120,7 +120,7 @@ func checkMetricFile(mFile string) {
 		} else if os.IsNotExist(err) {
 			continue
 		} else {
-			klog.Fatalf("Could not watch metrics file: %v", err)
+			klog.V(0).Fatalf("Could not watch metrics file: %v", err)
 		}
 	}
 }
@@ -133,7 +133,7 @@ func printMetricsFile(mFile string) {
 	// Print lines from metrics file.
 	t, _ := tail.TailFile(mFile, tail.Config{Follow: true})
 	for line := range t.Lines {
-		klog.Info(line.Text)
+		klog.V(3).Info(line.Text)
 	}
 }
 
@@ -162,11 +162,11 @@ func watchMetricsFile(mFile string, stopRules stopRulesFlag, filters []string) {
 	// Get Main proccess.
 	_, mainProcPid, err := common.GetMainProcesses(mFile)
 	if err != nil {
-		klog.Fatalf("GetMainProcesses failed: %v", err)
+		klog.V(0).Fatalf("GetMainProcesses failed: %v", err)
 	}
 	mainProc, err := psutil.NewProcess(int32(mainProcPid))
 	if err != nil {
-		klog.Fatalf("Failed to create new Process from pid %v, error: %v", mainProcPid, err)
+		klog.V(0).Fatalf("Failed to create new Process from pid %v, error: %v", mainProcPid, err)
 	}
 
 	// Get list of regural expressions from filters.
@@ -177,7 +177,7 @@ func watchMetricsFile(mFile string, stopRules stopRulesFlag, filters []string) {
 	for line := range t.Lines {
 		logText := line.Text
 		// Print log line
-		klog.Info(logText)
+		klog.V(3).Info(logText)
 
 		// Check if log line contains metric from stop rules.
 		isRuleLine := false
@@ -203,7 +203,7 @@ func watchMetricsFile(mFile string, stopRules stopRulesFlag, filters []string) {
 				metricName := strings.TrimSpace(subMatchList[1])
 				metricValue, err := strconv.ParseFloat(strings.TrimSpace(subMatchList[2]), 64)
 				if err != nil {
-					klog.Fatalf("Unable to parse value %v to float for metric %v", metricValue, metricName)
+					klog.V(0).Fatalf("Unable to parse value %v to float for metric %v", metricValue, metricName)
 				}
 
 				// stopRules contains array of EarlyStoppingRules that has not been reached yet.
@@ -237,7 +237,7 @@ func watchMetricsFile(mFile string, stopRules stopRulesFlag, filters []string) {
 
 					ruleValue, err := strconv.ParseFloat(rule.Value, 64)
 					if err != nil {
-						klog.Fatalf("Unable to parse value %v to float for rule metric %v", rule.Value, rule.Name)
+						klog.V(0).Fatalf("Unable to parse value %v to float for rule metric %v", rule.Value, rule.Name)
 					}
 
 					// Metric value can be equal, less or greater than stop rule.
@@ -255,7 +255,7 @@ func watchMetricsFile(mFile string, stopRules stopRulesFlag, filters []string) {
 
 		// If stopRules array is empty, Trial is early stopped.
 		if len(stopRules) == 0 {
-			klog.Info("Training container is early stopped")
+			klog.V(3).Info("Training container is early stopped")
 			isEarlyStopped = true
 
 			// Create ".pid" file with "early-stopped" line.
@@ -263,29 +263,29 @@ func watchMetricsFile(mFile string, stopRules stopRulesFlag, filters []string) {
 			markFile := filepath.Join(filepath.Dir(mFile), fmt.Sprintf("%d.pid", mainProcPid))
 			_, err := os.Create(markFile)
 			if err != nil {
-				klog.Fatalf("Create mark file %v error: %v", markFile, err)
+				klog.V(0).Fatalf("Create mark file %v error: %v", markFile, err)
 			}
 
 			err = ioutil.WriteFile(markFile, []byte(common.TrainingEarlyStopped), 0)
 			if err != nil {
-				klog.Fatalf("Write to file %v error: %v", markFile, err)
+				klog.V(0).Fatalf("Write to file %v error: %v", markFile, err)
 			}
 
 			// Get child proccess from main PID.
 			childProc, err := mainProc.Children()
 			if err != nil {
-				klog.Fatalf("Get children proceses for main PID: %v failed: %v", mainProcPid, err)
+				klog.V(0).Fatalf("Get children proceses for main PID: %v failed: %v", mainProcPid, err)
 			}
 
 			// TODO (andreyvelich): Currently support only single child process.
 			if len(childProc) != 1 {
-				klog.Fatalf("Multiple children processes are not supported. Children processes: %v", childProc)
+				klog.V(0).Fatalf("Multiple children processes are not supported. Children processes: %v", childProc)
 			}
 
 			// Terminate the child process.
 			err = childProc[0].Terminate()
 			if err != nil {
-				klog.Fatalf("Unable to terminate child process %v, error: %v", childProc[0], err)
+				klog.V(0).Fatalf("Unable to terminate child process %v, error: %v", childProc[0], err)
 			}
 
 			// Report metrics to DB.
@@ -299,14 +299,14 @@ func watchMetricsFile(mFile string, stopRules stopRulesFlag, filters []string) {
 				isProcRunning, err = mainProc.IsRunning()
 				// Ignore "no such file error". It means that process is complete.
 				if err != nil && !os.IsNotExist(err) {
-					klog.Fatalf("Check process status for main PID: %v failed: %v", mainProcPid, err)
+					klog.V(0).Fatalf("Check process status for main PID: %v failed: %v", mainProcPid, err)
 				}
 			}
 
 			// Create connection and client for Early Stopping service.
 			conn, err := grpc.Dial(*earlyStopServiceAddr, grpc.WithInsecure())
 			if err != nil {
-				klog.Fatalf("Could not connect to Early Stopping service, error: %v", err)
+				klog.V(0).Fatalf("Could not connect to Early Stopping service, error: %v", err)
 			}
 			defer conn.Close()
 			c := api.NewEarlyStoppingClient(conn)
@@ -318,10 +318,10 @@ func watchMetricsFile(mFile string, stopRules stopRulesFlag, filters []string) {
 			// Send request to change Trial status to early stopped.
 			_, err = c.SetTrialStatus(context.Background(), setTrialStatusReq)
 			if err != nil {
-				klog.Fatalf("Set Trial status error: %v", err)
+				klog.V(0).Fatalf("Set Trial status error: %v", err)
 			}
 
-			klog.Infof("Trial status is successfully updated")
+			klog.V(3).Infof("Trial status is successfully updated")
 
 		}
 	}
@@ -329,7 +329,7 @@ func watchMetricsFile(mFile string, stopRules stopRulesFlag, filters []string) {
 
 func deleteStopRule(stopRules []commonv1beta1.EarlyStoppingRule, idx int) []commonv1beta1.EarlyStoppingRule {
 	if idx >= len(stopRules) {
-		klog.Fatalf("Index %v out of range stopRules: %v", idx, stopRules)
+		klog.V(0).Fatalf("Index %v out of range stopRules: %v", idx, stopRules)
 	}
 	stopRules[idx] = stopRules[len(stopRules)-1]
 	stopRules[len(stopRules)-1] = commonv1beta1.EarlyStoppingRule{}
@@ -339,7 +339,7 @@ func deleteStopRule(stopRules []commonv1beta1.EarlyStoppingRule, idx int) []comm
 func main() {
 	flag.Var(&stopRules, "stop-rule", "The list of early stopping stop rules")
 	flag.Parse()
-	klog.Infof("Trial Name: %s", *trialName)
+	klog.V(3).Infof("Trial Name: %s", *trialName)
 
 	var filters []string
 	if len(*metricFilters) != 0 {
@@ -362,7 +362,7 @@ func main() {
 		CompletedMarkedDirPath: filepath.Dir(*metricsFilePath),
 	}
 	if err := common.WaitMainProcesses(wopts); err != nil {
-		klog.Fatalf("Failed to wait for worker container: %v", err)
+		klog.V(0).Fatalf("Failed to wait for worker container: %v", err)
 	}
 
 	// If training was not early stopped, report the metrics.
@@ -375,7 +375,7 @@ func reportMetrics(filters []string) {
 
 	conn, err := grpc.Dial(*dbManagerServiceAddr, grpc.WithInsecure())
 	if err != nil {
-		klog.Fatalf("Could not connect to DB manager service, error: %v", err)
+		klog.V(0).Fatalf("Could not connect to DB manager service, error: %v", err)
 	}
 	defer conn.Close()
 	c := api.NewDBManagerClient(conn)
@@ -386,7 +386,7 @@ func reportMetrics(filters []string) {
 	}
 	olog, err := filemc.CollectObservationLog(*metricsFilePath, metricList, filters)
 	if err != nil {
-		klog.Fatalf("Failed to collect logs: %v", err)
+		klog.V(0).Fatalf("Failed to collect logs: %v", err)
 	}
 	reportreq := &api.ReportObservationLogRequest{
 		TrialName:      *trialName,
@@ -394,7 +394,7 @@ func reportMetrics(filters []string) {
 	}
 	_, err = c.ReportObservationLog(ctx, reportreq)
 	if err != nil {
-		klog.Fatalf("Failed to Report logs: %v", err)
+		klog.V(0).Fatalf("Failed to Report logs: %v", err)
 	}
-	klog.Infof("Metrics reported. :\n%v", olog)
+	klog.V(3).Infof("Metrics reported. :\n%v", olog)
 }

@@ -62,12 +62,12 @@ func (s *SuggestionService) GetSuggestions(
 	objectMetricName := req.GetExperiment().GetSpec().GetObjective().GetObjectiveMetricName()
 	trials, err := toGoptunaTrials(req.GetTrials(), objectMetricName, s.study, s.searchSpace)
 	if err != nil {
-		klog.Errorf("Failed to convert to Goptuna trials: %s", err)
+		klog.V(1).Errorf("Failed to convert to Goptuna trials: %s", err)
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 	err = s.syncTrials(trials)
 	if err != nil {
-		klog.Errorf("Failed to sync Goptuna trials: %s", err)
+		klog.V(1).Errorf("Failed to sync Goptuna trials: %s", err)
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
@@ -76,11 +76,11 @@ func (s *SuggestionService) GetSuggestions(
 	for i := 0; i < requestNumber; i++ {
 		trialID, assignments, err := sampleNextParam(s.study, s.searchSpace)
 		if err != nil {
-			klog.Errorf("Failed to sample next param: trialID=%d, err=%s", trialID, err)
+			klog.V(1).Errorf("Failed to sample next param: trialID=%d, err=%s", trialID, err)
 			return nil, status.Error(codes.Internal, err.Error())
 		}
 
-		klog.Infof("Success to sample new trial: trialID=%d, assignments=%v", trialID, assignments)
+		klog.V(3).Infof("Success to sample new trial: trialID=%d, assignments=%v", trialID, assignments)
 		parameterAssignments[i] = &api_v1_beta1.GetSuggestionsReply_ParameterAssignments{
 			Assignments: assignments,
 		}
@@ -109,11 +109,11 @@ func (s *SuggestionService) syncTrials(ktrials map[string]goptuna.FrozenTrial) (
 			// So `findGoptunaTrialIDByParam()` returns the goptuna trial ID from the parameter values.
 			gtrialID, err = findGoptunaTrialIDByParam(s.study, s.trialMapping, ktrial)
 			if err != nil {
-				klog.Errorf("Failed to find Goptuna Trial ID: trialName=%s, err=%s", katibTrialName, err)
+				klog.V(1).Errorf("Failed to find Goptuna Trial ID: trialName=%s, err=%s", katibTrialName, err)
 				return err
 			}
 			s.trialMapping[katibTrialName] = gtrialID
-			klog.Infof("Update trial mapping : trialName=%s -> trialID=%d", katibTrialName, gtrialID)
+			klog.V(3).Infof("Update trial mapping : trialName=%s -> trialID=%d", katibTrialName, gtrialID)
 		}
 
 		gtrial, err := s.study.Storage.GetTrial(gtrialID)
@@ -139,11 +139,11 @@ func (s *SuggestionService) syncTrials(ktrials map[string]goptuna.FrozenTrial) (
 
 		err = s.study.Storage.SetTrialState(gtrialID, ktrial.State)
 		if err != nil {
-			klog.Errorf("Failed to update state: %s", err)
+			klog.V(1).Errorf("Failed to update state: %s", err)
 			return err
 		}
 
-		klog.Infof("Detect changes of Trial (trialName=%s, trialID=%d) : State %s, Evaluation %f",
+		klog.V(3).Infof("Detect changes of Trial (trialName=%s, trialID=%d) : State %s, Evaluation %f",
 			katibTrialName, gtrialID, ktrial.State, ktrial.Value)
 	}
 	return nil

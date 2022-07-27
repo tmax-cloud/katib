@@ -65,10 +65,10 @@ func parseLogs(logs []string, metrics []string, filters []string) (*v1beta1.Obse
 		timestamp := time.Time{}.UTC().Format(time.RFC3339)
 		ls := strings.SplitN(logline, " ", 2)
 		if len(ls) != 2 {
-			klog.Warningf("Metrics will not have timestamp since %s doesn't begin with timestamp string", logline)
+			klog.V(2).Infof("Metrics will not have timestamp since %s doesn't begin with timestamp string", logline)
 		} else {
 			if _, err := time.Parse(time.RFC3339Nano, ls[0]); err != nil {
-				klog.Warningf("Metrics will not have timestamp since error parsing time %s: %v", ls[0], err)
+				klog.V(2).Infof("Metrics will not have timestamp since error parsing time %s: %v", ls[0], err)
 			} else {
 				timestamp = ls[0]
 			}
@@ -118,7 +118,7 @@ func parseLogs(logs []string, metrics []string, filters []string) (*v1beta1.Obse
 				},
 			},
 		}
-		klog.Infof("Objective metric %v is not found in training logs, %v value is reported", metrics[0], consts.UnavailableMetricValue)
+		klog.V(3).Infof("Objective metric %v is not found in training logs, %v value is reported", metrics[0], consts.UnavailableMetricValue)
 	} else {
 		olog.MetricLogs = mlogs
 	}

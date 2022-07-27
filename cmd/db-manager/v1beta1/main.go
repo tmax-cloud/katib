@@ -87,30 +87,50 @@ func (s *server) Check(ctx context.Context, in *health_pb.HealthCheckRequest) (*
 }
 
 func main() {
-	flag.Parse()
 	var err error
+	var LogLevel string
+
+	flag.StringVar(&LogLevel, "log-level", "INFO", "Log Level; INFO, WARN, ERROR, FATAL")
+    flag.Parse()
+
+	if LogLevel == "INFO" || LogLevel == "info" {
+        LogLevel = "3"
+    } else if LogLevel == "WARN" || LogLevel == "warn" {
+        LogLevel = "2"
+    } else if LogLevel == "ERROR" || LogLevel == "error" {
+        LogLevel = "1"
+    } else if LogLevel == "FATAL" || LogLevel == "fatal" {
+        LogLevel = "0"
+    } else {
+        klog.Infoln("Unknown log-level paramater. ")
+        LogLevel = "3"
+    }
+    klog.InitFlags(nil)
+    flag.Set("v", LogLevel)
+    flag.Parse()
+	
 	dbNameEnvName := common.DBNameEnvName
 	dbName := os.Getenv(dbNameEnvName)
 	if dbName == "" {
-		klog.Fatal("DB_NAME env is not set. Exiting")
+		klog.V(0).Info("DB_NAME env is not set. Exiting")
 	}
 	dbIf, err = db.NewKatibDBInterface(dbName)
 	if err != nil {
-		klog.Fatalf("Failed to open db connection: %v", err)
+		klog.V(0).Infof("Failed to open db connection: %v", err)
 	}
 	dbIf.DBInit()
 	listener, err := net.Listen("tcp", port)
 	if err != nil {
-		klog.Fatalf("Failed to listen: %v", err)
+		klog.V(0).Infof("Failed to listen: %v", err)
 	}
 
 	size := 1<<31 - 1
-	klog.Infof("Start Katib manager: %s", port)
+	klog.V(3).Infof("Start Katib manager: %s", port)
 	s := grpc.NewServer(grpc.MaxRecvMsgSize(size), grpc.MaxSendMsgSize(size))
 	api_pb.RegisterDBManagerServer(s, &server{})
 	health_pb.RegisterHealthServer(s, &server{})
 	reflection.Register(s)
 	if err = s.Serve(listener); err != nil {
-		klog.Fatalf("Failed to serve: %v", err)
+		klog.V(0).Infof("Failed to serve: %v", err)
 	}
 }

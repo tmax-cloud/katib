@@ -39,7 +39,7 @@ import (
 )
 
 func main() {
-	logf.SetLogger(zap.New())
+	
 	log := logf.Log.WithName("entrypoint")
 
 	var experimentSuggestionName string
@@ -66,9 +66,15 @@ func main() {
 	// flag.StringVar(&serviceName, "webhook-service-name", "katib-controller", "The service name which will be used in webhook")
 	// TODO (andreyvelich): Currently is is not possible to store webhook cert in the local file system.
 	// flag.BoolVar(&certLocalFS, "cert-localfs", false, "Store the webhook cert in local file system")
+	opts := zap.Options{
+		Development: false,
+	}
+	opts.BindFlags(flag.CommandLine)
 
 	flag.Parse()
 
+	logf.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
+	
 	// Set the config in viper.
 	viper.Set(consts.ConfigExperimentSuggestionName, experimentSuggestionName)
 	viper.Set(consts.ConfigInjectSecurityContext, injectSecurityContext)

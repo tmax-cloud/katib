@@ -75,9 +75,9 @@ func openSQLConn(driverName string, dataSourceName string, interval time.Duratio
 				if err = db.Ping(); err == nil {
 					return db, nil
 				}
-				klog.Errorf("Ping to Katib db failed: %v", err)
+				klog.V(1).Infof("Ping to Katib db failed: %v", err)
 			} else {
-				klog.Errorf("Open sql connection failed: %v", err)
+				klog.V(1).Infof("Open sql connection failed: %v", err)
 			}
 		case <-timeoutC:
 			return nil, fmt.Errorf("Timeout waiting for DB conn successfully opened.")
@@ -188,12 +188,12 @@ func (d *dbConn) GetObservationLog(trialName string, metricName string, startTim
 		var mname, mvalue, sqlTimeStr string
 		err := rows.Scan(&sqlTimeStr, &mname, &mvalue)
 		if err != nil {
-			klog.Errorf("Error scanning log: %v", err)
+			klog.V(1).Infof("Error scanning log: %v", err)
 			continue
 		}
 		ptime, err := time.Parse(mysqlTimeFmt, sqlTimeStr)
 		if err != nil {
-			klog.Errorf("Error parsing time %s: %v", sqlTimeStr, err)
+			klog.V(1).Infof("Error parsing time %s: %v", sqlTimeStr, err)
 			continue
 		}
 		timeStamp := ptime.UTC().Format(time.RFC3339Nano)

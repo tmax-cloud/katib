@@ -28,12 +28,12 @@ import (
 func main() {
 	kubeClient, err := client.New(config.GetConfigOrDie(), client.Options{Scheme: scheme.Scheme})
 	if err != nil {
-		klog.Fatalf("Failed to create kube client.")
+		klog.V(0).Infof("Failed to create kube client.")
 	}
 
 	cmd, err := v1beta1.NewKatibCertGeneratorCmd(kubeClient)
 	if err != nil {
-		klog.Fatalf("Failed to generate cert: %v", err)
+		klog.V(0).Infof("Failed to generate cert: %v", err)
 	}
 
 	if err = cmd.Execute(); err != nil {

@@ -162,12 +162,12 @@ func (d *dbConn) GetObservationLog(trialName string, metricName string, startTim
 		var mname, mvalue, sqlTimeStr string
 		err := rows.Scan(&sqlTimeStr, &mname, &mvalue)
 		if err != nil {
-			klog.Errorf("Error scanning log: %v", err)
+			klog.V(1).Infof("Error scanning log: %v", err)
 			continue
 		}
 		ptime, err := time.Parse(mysqlTimeFmt, sqlTimeStr)
 		if err != nil {
-			klog.Errorf("Error parsing time %s: %v", sqlTimeStr, err)
+			klog.V(1).Infof("Error parsing time %s: %v", sqlTimeStr, err)
 			continue
 		}
 		timeStamp := ptime.UTC().Format(time.RFC3339Nano)

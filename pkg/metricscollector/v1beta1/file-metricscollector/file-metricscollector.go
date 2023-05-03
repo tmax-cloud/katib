@@ -75,10 +75,10 @@ func parseLogsInTextFormat(logs []string, metrics []string, filters []string) (*
 		timestamp := time.Time{}.UTC().Format(time.RFC3339)
 		ls := strings.SplitN(logline, " ", 2)
 		if len(ls) != 2 {
-			klog.Warningf("Metrics will not have timestamp since %s doesn't begin with timestamp string", logline)
+			klog.V(2).Infof("Metrics will not have timestamp since %s doesn't begin with timestamp string", logline)
 		} else {
 			if _, err := time.Parse(time.RFC3339Nano, ls[0]); err != nil {
-				klog.Warningf("Metrics will not have timestamp since error parsing time %s: %v", ls[0], err)
+				klog.V(2).Infof("Metrics will not have timestamp since error parsing time %s: %v", ls[0], err)
 			} else {
 				timestamp = ls[0]
 			}
@@ -126,10 +126,10 @@ func parseLogsInJsonFormat(logs []string, metrics []string) (*v1beta1.Observatio
 		timestamp := time.Time{}.UTC().Format(time.RFC3339)
 		timestampJsonValue, exist := jsonObj[common.TimeStampJsonKey]
 		if !exist {
-			klog.Warningf("Metrics will not have timestamp since %s doesn't have the key timestamp", logline)
+			klog.V(2).Infof("Metrics will not have timestamp since %s doesn't have the key timestamp", logline)
 		} else {
 			if parsedTimestamp := parseTimestamp(timestampJsonValue); parsedTimestamp == "" {
-				klog.Warningf("Metrics will not have timestamp since error parsing time %v", timestampJsonValue)
+				klog.V(2).Infof("Metrics will not have timestamp since error parsing time %v", timestampJsonValue)
 			} else {
 				timestamp = parsedTimestamp
 			}
@@ -164,7 +164,7 @@ func newObservationLog(mlogs []*v1beta1.MetricLog, metrics []string) *v1beta1.Ob
 	}
 	// If objective metrics were not reported, insert unavailable value in the DB
 	if !isObjectiveMetricReported {
-		klog.Infof("Objective metric %v is not found in training logs, %v value is reported", metrics[0], consts.UnavailableMetricValue)
+		klog.V(3).Infof("Objective metric %v is not found in training logs, %v value is reported", metrics[0], consts.UnavailableMetricValue)
 		return &v1beta1.ObservationLog{
 			MetricLogs: []*v1beta1.MetricLog{
 				{
@@ -186,10 +186,10 @@ func parseTimestamp(timestamp interface{}) string {
 	if stringTimestamp, ok := timestamp.(string); ok {
 
 		if stringTimestamp == "" {
-			klog.Warningln("Timestamp is empty")
+			klog.V(2).Infoln("Timestamp is empty")
 			return ""
 		} else if _, err := time.Parse(time.RFC3339Nano, stringTimestamp); err != nil {
-			klog.Warningf("Failed to parse timestamp since %s is not RFC3339Nano format", stringTimestamp)
+			klog.V(2).Infof("Failed to parse timestamp since %s is not RFC3339Nano format", stringTimestamp)
 			return ""
 		}
 		return stringTimestamp
@@ -198,7 +198,7 @@ func parseTimestamp(timestamp interface{}) string {
 
 		floatTimestamp, ok := timestamp.(float64)
 		if !ok {
-			klog.Warningf("Failed to parse timestamp since the type of %v is neither string nor float64", timestamp)
+			klog.V(2).Infof("Failed to parse timestamp since the type of %v is neither string nor float64", timestamp)
 			return ""
 		}
 
@@ -207,7 +207,7 @@ func parseTimestamp(timestamp interface{}) string {
 
 		sec, err := strconv.ParseInt(t[0], 10, 64)
 		if err != nil {
-			klog.Warningf("Failed to parse timestamp; %v", err)
+			klog.V(2).Infof("Failed to parse timestamp; %v", err)
 			return ""
 		}
 
@@ -215,7 +215,7 @@ func parseTimestamp(timestamp interface{}) string {
 		if len(t) == 2 {
 			nanoSec, err = strconv.ParseInt(t[1], 10, 64)
 			if err != nil {
-				klog.Warningf("Failed to parse timestamp; %v", err)
+				klog.V(2).Infof("Failed to parse timestamp; %v", err)
 				return ""
 			}
 		}

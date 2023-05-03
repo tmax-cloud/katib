@@ -43,15 +43,15 @@ func (s *healthService) Check(ctx context.Context, in *health_pb.HealthCheckRequ
 func main() {
 	l, err := net.Listen("tcp", address)
 	if err != nil {
-		klog.Fatalf("Failed to listen: %v", err)
+		klog.V(0).Infof("Failed to listen: %v", err)
 	}
 	srv := grpc.NewServer()
 	api_v1_beta1.RegisterSuggestionServer(srv, suggestion.NewSuggestionService())
 	health_pb.RegisterHealthServer(srv, &healthService{})
 
-	klog.Infof("Start Goptuna suggestion service: %s", address)
+	klog.V(3).Infof("Start Goptuna suggestion service: %s", address)
 	err = srv.Serve(l)
 	if err != nil {
-		klog.Fatalf("Failed to serve: %v", err)
+		klog.V(0).Infof("Failed to serve: %v", err)
 	}
 }

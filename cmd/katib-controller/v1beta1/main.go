@@ -40,7 +40,7 @@ import (
 )
 
 func main() {
-	logf.SetLogger(zap.New())
+//	logf.SetLogger(zap.New())
 	log := logf.Log.WithName("entrypoint")
 
 	var experimentSuggestionName string
@@ -70,7 +70,14 @@ func main() {
 	// TODO (andreyvelich): Currently is is not possible to store webhook cert in the local file system.
 	// flag.BoolVar(&certLocalFS, "cert-localfs", false, "Store the webhook cert in local file system")
 
+	opts := zap.Options{
+		Development: false,
+	}
+	opts.BindFlags(flag.CommandLine)
+
 	flag.Parse()
+
+	logf.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 
 	// Set the config in viper.
 	viper.Set(consts.ConfigExperimentSuggestionName, experimentSuggestionName)

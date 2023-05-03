@@ -29,10 +29,10 @@ import (
 func NewKatibDBInterface(dbName string, connectTimeout time.Duration) (common.KatibDBInterface, error) {
 
 	if dbName == common.MySqlDBNameEnvValue {
-		klog.Info("Using MySQL")
+		klog.V(3).Info("Using MySQL")
 		return mysql.NewDBInterface(connectTimeout)
 	} else if dbName == common.PostgresSQLDBNameEnvValue {
-		klog.Info("Using Postgres")
+		klog.V(3).Info("Using Postgres")
 		return postgres.NewDBInterface(connectTimeout)
 	}
 	return nil, errors.New("Invalid DB Name")

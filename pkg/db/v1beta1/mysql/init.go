@@ -24,7 +24,7 @@ import (
 
 func (d *dbConn) DBInit() {
 	db := d.db
-	klog.Info("Initializing v1beta1 DB schema")
+	klog.V(3).Info("Initializing v1beta1 DB schema")
 
 	_, err := db.Exec(`CREATE TABLE IF NOT EXISTS observation_logs
 		(trial_name VARCHAR(255) NOT NULL,
@@ -33,7 +33,7 @@ func (d *dbConn) DBInit() {
 		metric_name VARCHAR(255) NOT NULL,
 		value TEXT NOT NULL)`)
 	if err != nil {
-		klog.Fatalf("Error creating observation_logs table: %v", err)
+		klog.V(0).Infof("Error creating observation_logs table: %v", err)
 	}
 }
 

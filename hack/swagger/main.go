@@ -31,7 +31,7 @@ import (
 // Generate OpenAPI spec definitions for Katib Resource
 func main() {
 	if len(os.Args) <= 2 {
-		klog.Fatal("Supply Swagger version and Katib Version")
+		klog.V(0).Info("Supply Swagger version and Katib Version")
 	}
 	version := os.Args[1]
 	if !strings.HasPrefix(version, "v") {
@@ -43,7 +43,7 @@ func main() {
 
 	katibVersion := os.Args[2]
 	if katibVersion != "v1beta1" {
-		klog.Fatalf("Katib version %v is not supported", katibVersion)
+		klog.V(0).Infof("Katib version %v is not supported", katibVersion)
 	}
 
 	oAPIDefs := v1beta1.GetOpenAPIDefinitions(refCallback)
@@ -67,7 +67,7 @@ func main() {
 	}
 	jsonBytes, err := json.MarshalIndent(swagger, "", "  ")
 	if err != nil {
-		klog.Fatal(err.Error())
+		klog.V(0).Info(err.Error())
 	}
 	fmt.Println(string(jsonBytes))
 }

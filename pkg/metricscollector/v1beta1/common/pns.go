@@ -67,14 +67,14 @@ func GetMainProcesses(completedMarkedDirPath string) (map[int]bool, int, error) 
 		// Create process object from pid
 		proc, err := psutil.NewProcess(pid)
 		if err != nil {
-			klog.Infof("Unable to create new process from pid: %v, error: %v. Continue to next pid", pid, err)
+			klog.V(3).Infof("Unable to create new process from pid: %v, error: %v. Continue to next pid", pid, err)
 			continue
 		}
 
 		// Get parent process
 		ppid, err := proc.Ppid()
 		if err != nil {
-			klog.Infof("Unable to get parent process for pid: %v, error: %v. Continue to next pid", pid, err)
+			klog.V(3).Infof("Unable to get parent process for pid: %v, error: %v. Continue to next pid", pid, err)
 			continue
 		}
 
@@ -86,7 +86,7 @@ func GetMainProcesses(completedMarkedDirPath string) (map[int]bool, int, error) 
 		// Read the process command line
 		cmdline, err := proc.Cmdline()
 		if err != nil {
-			klog.Infof("Unable to get cmdline from pid: %v, error: %v. Continue to next pid", pid, err)
+			klog.V(3).Infof("Unable to get cmdline from pid: %v, error: %v. Continue to next pid", pid, err)
 			continue
 		}
 
